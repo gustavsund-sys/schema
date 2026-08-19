@@ -94,6 +94,7 @@ function render() {
   updateNextLesson();
 }
 document.addEventListener("click", e => { const childBtn=e.target.closest("[data-child]"); if(childBtn){child=childBtn.dataset.child; theme=settingsForChild().theme || theme; applyTheme(theme); $("#home").classList.add("hidden"); $("#schedule").classList.remove("hidden"); render();} const weekDay=e.target.closest("[data-week-day]"); if(weekDay){chosenDay=+weekDay.dataset.weekDay;view="day";render();window.scrollTo({ top: 0, behavior: "smooth" });} const step=e.target.closest("[data-step]"); if(step && !step.disabled){chosenDay+=+step.dataset.step;render();window.scrollTo({ top: 0, behavior: "smooth" });} const viewBtn=e.target.closest("[data-view]"); if(viewBtn){view=viewBtn.dataset.view;if(view === "day" && todayIndex >= 0 && todayIndex < 5)chosenDay=todayIndex;render();} });
+document.querySelectorAll(".view-toggle [data-view]").forEach(button => button.addEventListener("click", () => { view=button.dataset.view; if(view === "day" && todayIndex >= 0 && todayIndex < 5)chosenDay=todayIndex; render(); }));
 $("#go-home").onclick=()=>{$("#schedule").classList.add("hidden");$("#home").classList.remove("hidden")};
 function applyTheme(theme) { document.body.classList.toggle("dark", theme === "dark"); document.querySelector('meta[name="theme-color"]').content = theme === "dark" ? "#171827" : "#5b47e5"; $("#theme-toggle").textContent = theme === "dark" ? "☀" : "◐"; }
 let theme = localStorage.getItem("mitt-skolschema-tema") || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
