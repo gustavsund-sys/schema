@@ -82,7 +82,7 @@ const schedules = {
 const storageKey = "mitt-skolschema-barnvanlig-v1";
 const settingsKey = "mitt-skolschema-installningar-v1";
 const accents = { purple: "#5b47e5", blue: "#2378df", green: "#058344", coral: "#e75a5a" };
-const defaultSettings = () => ({ accent: "purple", display: "both", packItems: [], packDone: {} });
+const defaultSettings = () => ({ accent: "purple", display: "both" });
 let childSettings = { sixten: defaultSettings(), ilse: defaultSettings() };
 function validSchedule(schedule) {
   return Array.isArray(schedule) && schedule.length === 5 && schedule.every(day =>
@@ -128,27 +128,21 @@ function updateNextLesson() {
   container.innerHTML = `<article class="next-card"><p class="eyebrow">NÄSTA LEKTION</p><h2>${icon} ${name} · ${upcoming[0]}</h2><p class="countdown">${name} börjar om ${remaining} min</p>${summary}</article>`;
 }
 function lessonCard(lesson, small=false) { const [start,end,code,detail] = lesson, [name,icon,color] = info(code), display = settingsForChild().display; const time = display === "icons" ? "" : `<time>${start}${small ? "–" : "<br>– "}${end}</time>`; const iconHtml = display === "times" ? "" : `<span class="subject-icon" aria-hidden="true">${icon}</span>`; return small ? `<article class="week-lesson ${display}" style="--subject:${color}">${time}<strong>${name}</strong>${detail?`<small>${detail}</small>`:""}</article>` : `<article class="lesson ${display}" style="--subject:${color}">${time}<div class="lesson-info"><div><h3>${name}</h3>${detail?`<p>${detail}</p>`:""}</div>${iconHtml}</div></article>`; }
-function packList() {
-  const nextDay = chosenDay === 4 ? 0 : chosenDay + 1, nextLessons = schedules[child][nextDay];
-  const hints = { IDH: "Gympakläder och inneskor", SL: "Kläder som tål att bli smutsiga" };
-  const suggested = [...new Set(nextLessons.map(lesson => hints[lesson[2]]).filter(Boolean))];
-  const settings = settingsForChild(), items = [...suggested, ...settings.packItems];
-  const done = settings.packDone[String(nextDay)] || [];
-  const tomorrowSubjects = [...new Set(nextLessons.filter(lesson => lesson[2] !== "LUNCH").map(lesson => info(lesson[2])[0]))].join(" · ");
-  return `<section class="pack-card"><div><p class="eyebrow">I MORGON</p><h2>Packa till ${days[nextDay]}</h2><p>${tomorrowSubjects || "Inga lektioner."}</p></div>${items.length ? `<div class="pack-items">${items.map(item => `<label><input type="checkbox" data-pack-item="${escapeHtml(item)}" ${done.includes(item) ? "checked" : ""} /><span>${escapeHtml(item)}</span></label>`).join("")}</div>` : `<p class="pack-empty">Inget särskilt att packa just nu.</p>`}<form class="pack-add" id="pack-form"><input id="pack-input" maxlength="70" placeholder="Lägg till egen sak" aria-label="Lägg till egen sak" /><button class="secondary">Lägg till</button></form></section>`;
+function packReminder() {
+  const nextDay = chosenDay === 4 ? 0 : chosenDay + 1;
+  if (!schedules[child][nextDay].some(lesson => lesson[2] === "IDH")) return "";
+  return `<aside class="pack-reminder"><span aria-hidden="true">🏃</span><div><p class="eyebrow">I MORGON · ${days[nextDay].toUpperCase()}</p><h2>Kom ihåg idrottskläder</h2><p>Packa gympakläder och inneskor till i morgon.</p></div></aside>`;
 }
 function render() {
   const name = child === "sixten" ? "Sixten" : "Ilse"; const data = schedules[child];
   applyAccent();
   $("#child-label").textContent = `${name.toUpperCase()}S SCHEMA`; $("#schedule-title").textContent = `Hej ${name}!`;
   document.querySelectorAll(".view-toggle button").forEach(b => b.classList.toggle("active",b.dataset.view===view));
-  if (view === "day") { const isToday = chosenDay === todayIndex; $("#schedule-content").innerHTML = `<h2 class="day-title">${isToday ? "IDAG · " : ""}${days[chosenDay]}</h2><div class="day-list">${data[chosenDay].map(x=>lessonCard(x)).join("") || '<p class="empty">Inga lektioner idag.</p>'}</div>${packList()}<nav class="day-navigation" aria-label="Byt dag"><button data-step="-1" ${chosenDay === 0 ? "disabled" : ""}><span aria-hidden="true">←</span> Föregående</button><button data-step="1" ${chosenDay === days.length - 1 ? "disabled" : ""}>Nästa <span aria-hidden="true">→</span></button></nav>`; }
+  if (view === "day") { const isToday = chosenDay === todayIndex; $("#schedule-content").innerHTML = `<h2 class="day-title">${isToday ? "IDAG · " : ""}${days[chosenDay]}</h2><div class="day-list">${data[chosenDay].map(x=>lessonCard(x)).join("") || '<p class="empty">Inga lektioner idag.</p>'}</div>${packReminder()}<nav class="day-navigation" aria-label="Byt dag"><button data-step="-1" ${chosenDay === 0 ? "disabled" : ""}><span aria-hidden="true">←</span> Föregående</button><button data-step="1" ${chosenDay === days.length - 1 ? "disabled" : ""}>Nästa <span aria-hidden="true">→</span></button></nav>`; }
   else { const used=[...new Set(data.flat().map(x=>x[2]))]; $("#schedule-content").innerHTML = `<p class="week-hint">Tryck på dagens rubrik för att se den närmare.</p><div class="week-grid">${data.map((day,i)=>`<section class="week-day ${i === todayIndex ? "is-today" : ""}"><button class="week-day-heading" data-week-day="${i}" aria-label="Visa ${days[i]}"><h2>${days[i]}${i === todayIndex ? '<span class="today-badge">IDAG</span>' : ""}</h2><span aria-hidden="true">→</span></button><span class="week-count">${day.length} pass</span>${day.map(x=>lessonCard(x,true)).join("")}</section>`).join("")}</div><div class="legend">${used.map(c=>{const [n,,color]=info(c);return `<span style="--subject:${color}">${n}</span>`}).join("")}</div>`; }
   updateNextLesson();
 }
 document.addEventListener("click", e => { const childBtn=e.target.closest("[data-child]"); if(childBtn){child=childBtn.dataset.child; theme=settingsForChild().theme || theme; applyTheme(theme); $("#home").classList.add("hidden"); $("#schedule").classList.remove("hidden"); render();} const weekDay=e.target.closest("[data-week-day]"); if(weekDay){chosenDay=+weekDay.dataset.weekDay;view="day";render();window.scrollTo({ top: 0, behavior: "smooth" });} const step=e.target.closest("[data-step]"); if(step && !step.disabled){chosenDay+=+step.dataset.step;render();window.scrollTo({ top: 0, behavior: "smooth" });} const viewBtn=e.target.closest("[data-view]"); if(viewBtn){view=viewBtn.dataset.view;if(view === "day" && todayIndex >= 0 && todayIndex < 5)chosenDay=todayIndex;render();} });
-document.addEventListener("change", e => { const pack=e.target.closest("[data-pack-item]"); if(!pack)return; const settings=settingsForChild(), day=String(chosenDay === 4 ? 0 : chosenDay + 1), item=pack.dataset.packItem, done=new Set(settings.packDone[day] || []); pack.checked ? done.add(item) : done.delete(item); settings.packDone[day]=[...done]; saveSettings(); });
-document.addEventListener("submit", e => { if (e.target.id !== "pack-form") return; e.preventDefault(); const input=$("#pack-input"), item=input.value.trim(); if (!item) return; const settings=settingsForChild(); if (!settings.packItems.includes(item)) settings.packItems.push(item); saveSettings(); render(); });
 $("#go-home").onclick=()=>{$("#schedule").classList.add("hidden");$("#home").classList.remove("hidden")};
 function applyTheme(theme) { document.body.classList.toggle("dark", theme === "dark"); document.querySelector('meta[name="theme-color"]').content = theme === "dark" ? "#171827" : "#5b47e5"; $("#theme-toggle").textContent = theme === "dark" ? "☀" : "◐"; }
 let theme = localStorage.getItem("mitt-skolschema-tema") || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
@@ -166,6 +160,6 @@ function pdfPreview(week) { return week.map((day, index) => `<section><h4>${days
 $("#file-input").onchange=async e=>{const status=$("#import-status"), review=$("#pdf-review"); const file=e.target.files[0]; if(!file)return; review.classList.add("hidden"); try { status.textContent="Läser PDF:en lokalt och skapar ett förslag ..."; const parsed=await readPdfSchedule(file); const target=parsed.student || (/ilse/i.test(file.name)?"ilse":"sixten"); const draft={sixten:schedules.sixten,ilse:schedules.ilse}; draft[target]=parsed.week; $("#pdf-json").value=JSON.stringify(draft,null,2); $("#pdf-preview").innerHTML=pdfPreview(parsed.week); review.classList.remove("hidden"); status.textContent=`Förslag klart för ${target === "ilse" ? "Ilse" : "Sixten"}. Kontrollera och spara.`; }catch(error){ status.textContent=error.message === "NO_DAY_HEADERS" ? "Jag kunde inte hitta Måndag–Fredag i PDF:en. Kontrollera att det är ett veckoschema." : "PDF:en kunde inte tolkas. Kontrollera att texten är tydlig och prova igen."; }};
 $("#save-pdf-import").onclick=()=>{const status=$("#import-status");try{saveImportedSchedule(JSON.parse($("#pdf-json").value)); $("#pdf-review").classList.add("hidden"); status.textContent="Klart! Det granskade PDF-schemat är sparat på den här enheten.";}catch{status.textContent="Kunde inte spara. Kontrollera att JSON:en innehåller fem dagar för både Sixten och Ilse.";}};
 try {const saved=JSON.parse(localStorage.getItem(storageKey));if(validSchedule(saved?.sixten)&&validSchedule(saved?.ilse)){schedules.sixten=saved.sixten;schedules.ilse=saved.ilse;}}catch{}
-try {const saved=JSON.parse(localStorage.getItem(settingsKey));["sixten","ilse"].forEach(name => { if (saved?.[name]) childSettings[name] = { ...defaultSettings(), ...saved[name], packDone: saved[name].packDone || {} }; });}catch{}
+try {const saved=JSON.parse(localStorage.getItem(settingsKey));["sixten","ilse"].forEach(name => { if (saved?.[name]) childSettings[name] = { ...defaultSettings(), accent: saved[name].accent, display: saved[name].display, theme: saved[name].theme }; });}catch{}
 setInterval(updateNextLesson, 30000);
 if ("serviceWorker" in navigator) window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js"));
