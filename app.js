@@ -53,6 +53,10 @@ window.addEventListener("beforeinstallprompt", event => { event.preventDefault()
 installButton.onclick = async () => { if (!installEvent) return; installEvent.prompt(); await installEvent.userChoice; installEvent = null; installButton.classList.add("hidden"); };
 window.addEventListener("appinstalled", () => { installHelp.textContent = "Appen är installerad på hemskärmen."; installHelp.classList.remove("hidden"); installButton.classList.add("hidden"); });
 function info(code) { return subjectInfo[code] || [code, "📘", "#8d92a7"]; }
+const groupAlternatives = { sixten: { 3: [["08:10","08:40","SV","Alternativt grupppass"],["08:45","09:25","MU","Alternativt grupppass"],["09:25","10:15","MU","Alternativt grupppass"],["10:20","10:50","SV","Alternativt grupppass"]] } };
+function dayLessons(childId, dayIndex) { const regular=schedules[childId][dayIndex] || [], alternatives=groupAlternatives[childId]?.[dayIndex] || []; return [...regular,...alternatives.filter(extra=>!regular.some(lesson=>lesson[0]===extra[0]&&lesson[1]===extra[1]&&lesson[2]===extra[2]))].sort((a,b)=>a[0].localeCompare(b[0])); }
+function overlaps(a,b) { return a[0] < b[1] && b[0] < a[1]; }
+function renderDayLessons(lessons) { const remaining=[...lessons], sections=[]; while(remaining.length){const first=remaining.shift(), group=[first];let changed=true;while(changed){changed=false;for(let i=remaining.length-1;i>=0;i--)if(group.some(item=>overlaps(item,remaining[i]))){group.push(...remaining.splice(i,1));changed=true;}}group.sort((a,b)=>a[0].localeCompare(b[0]));sections.push(group);}return sections.map(group=>group.length===1?lessonCard(group[0]):`<section class="parallel-group"><header><span>GRUPPPASS</span><strong>Följ det pass som gäller din grupp</strong></header><div class="parallel-list">${group.map(item=>lessonCard(item)).join("")}</div></section>`).join(""); }
 function minutesSinceMidnight(time) { const [hours, minutes] = time.split(":").map(Number); return hours * 60 + minutes; }
 function updateNextLesson() {
   const container = $("#next-lesson");
@@ -60,13 +64,13 @@ function updateNextLesson() {
   const reminder = view === "day" ? packReminder() : "";
   const actualDay = new Date().getDay() - 1;
   if (actualDay < 0 || actualDay > 4) { container.innerHTML = `<article class="next-card finished"><p class="eyebrow">SKOLDAGEN</p><h2>Ingen skola idag</h2><p>Vi ses nästa skoldag.</p></article>${reminder}`; return; }
-  const now = new Date(), nowMinutes = now.getHours() * 60 + now.getMinutes(), today = schedules[child][actualDay];
+  const now = new Date(), nowMinutes = now.getHours() * 60 + now.getMinutes(), today = dayLessons(child,actualDay);
   const current = today.find(lesson => minutesSinceMidnight(lesson[0]) <= nowMinutes && minutesSinceMidnight(lesson[1]) > nowMinutes);
   const upcoming = today.find(lesson => lesson[2] !== "LUNCH" && minutesSinceMidnight(lesson[0]) > nowMinutes);
   const lunch = today.find(lesson => lesson[2] === "LUNCH");
   const last = [...today].filter(lesson => lesson[2] !== "LUNCH").at(-1);
   const nextDay = actualDay === 4 ? 0 : actualDay + 1;
-  const tomorrowFirst = schedules[child][nextDay].find(lesson => lesson[2] !== "LUNCH");
+  const tomorrowFirst = dayLessons(child,nextDay).find(lesson => lesson[2] !== "LUNCH");
   const summary = `<div class="quick-facts"><span>🍽️ Lunch ${lunch?.[0] || ""}</span><span>🏁 Slutar ${last?.[1] || ""}</span><span>→ ${days[nextDay]} ${tomorrowFirst?.[0] || ""}</span></div>`;
   if (current) { const [name, icon] = info(current[2]), remaining = minutesSinceMidnight(current[1]) - nowMinutes; container.innerHTML = `<article class="next-card"><p class="eyebrow">JUST NU</p><h2>${icon} ${name} · till ${current[1]}</h2><p class="countdown">Slutar om ${remaining} min</p>${summary}</article>${reminder}`; return; }
   if (!upcoming) { container.innerHTML = `<article class="next-card finished"><p class="eyebrow">SKOLDAGEN</p><h2>Dagens skoldag är slut</h2><p>Fint jobbat idag.</p>${summary}</article>${reminder}`; return; }
@@ -76,15 +80,15 @@ function updateNextLesson() {
 function lessonCard(lesson, small=false) { const [start,end,code,detail] = lesson, [name,icon,color] = info(code), display = settingsForChild().display; const time = display === "icons" ? "" : `<time>${start}${small ? "–" : "<br>– "}${end}</time>`; const iconHtml = display === "times" ? "" : `<span class="subject-icon" aria-hidden="true">${icon}</span>`; const timeCards = display === "icons" ? "" : `<div class="lesson-times" aria-label="Tid ${start} till ${end}"><b>${start}</b><span aria-hidden="true">–</span><b>${end}</b></div>`; return small ? `<article class="week-lesson ${display}" style="--subject:${color}">${time}<strong>${name}</strong>${detail?`<small>${detail}</small>`:""}</article>` : `<article class="lesson ${display}" style="--subject:${color}"><div class="lesson-info">${timeCards}<div class="lesson-main">${iconHtml}<div><h3>${name}</h3>${detail?`<p>${detail}</p>`:""}</div></div></div></article>`; }
 function packReminder() {
   const nextDay = chosenDay === 4 ? 0 : chosenDay + 1;
-  if (!schedules[child][nextDay].some(lesson => lesson[2] === "IDH")) return "";
+  if (!dayLessons(child,nextDay).some(lesson => lesson[2] === "IDH")) return "";
   return `<aside class="pack-reminder"><span aria-hidden="true">🏃</span><div><p class="eyebrow">I MORGON · ${days[nextDay].toUpperCase()}</p><h2>Kom ihåg idrottskläder</h2><p>Packa gympakläder och inneskor till i morgon.</p></div></aside>`;
 }
 function render() {
-  const name = child === "sixten" ? "Sixten" : "Ilse"; const data = schedules[child];
+  const name = child === "sixten" ? "Sixten" : "Ilse"; const data = schedules[child].map((_,index)=>dayLessons(child,index));
   applyAccent();
   $("#child-label").textContent = `${name.toUpperCase()}S SCHEMA`; $("#schedule-title").textContent = `Hej ${name}!`;
   document.querySelectorAll(".view-toggle button").forEach(b => b.classList.toggle("active",b.dataset.view===view));
-  if (view === "day") { const isToday = chosenDay === todayIndex; $("#schedule-content").innerHTML = `<h2 class="day-title">${isToday ? "IDAG · " : ""}${days[chosenDay]}</h2><div class="day-list">${data[chosenDay].map(x=>lessonCard(x)).join("") || '<p class="empty">Inga lektioner idag.</p>'}</div><nav class="day-navigation" aria-label="Byt dag"><button data-step="-1" ${chosenDay === 0 ? "disabled" : ""}><span aria-hidden="true">←</span> Föregående</button><button data-step="1" ${chosenDay === days.length - 1 ? "disabled" : ""}>Nästa <span aria-hidden="true">→</span></button></nav>`; }
+  if (view === "day") { const isToday = chosenDay === todayIndex; $("#schedule-content").innerHTML = `<h2 class="day-title">${isToday ? "IDAG · " : ""}${days[chosenDay]}</h2><div class="day-list">${renderDayLessons(data[chosenDay]) || '<p class="empty">Inga lektioner idag.</p>'}</div><nav class="day-navigation" aria-label="Byt dag"><button data-step="-1" ${chosenDay === 0 ? "disabled" : ""}><span aria-hidden="true">←</span> Föregående</button><button data-step="1" ${chosenDay === days.length - 1 ? "disabled" : ""}>Nästa <span aria-hidden="true">→</span></button></nav>`; }
   else { const used=[...new Set(data.flat().map(x=>x[2]))]; $("#schedule-content").innerHTML = `<p class="week-hint">Tryck på dagens rubrik för att se den närmare.</p><div class="week-grid">${data.map((day,i)=>`<section class="week-day ${i === todayIndex ? "is-today" : ""}"><button class="week-day-heading" data-week-day="${i}" aria-label="Visa ${days[i]}"><h2>${days[i]}${i === todayIndex ? '<span class="today-badge">IDAG</span>' : ""}</h2><span aria-hidden="true">→</span></button><span class="week-count">${day.length} pass</span>${day.map(x=>lessonCard(x,true)).join("")}</section>`).join("")}</div><div class="legend">${used.map(c=>{const [n,,color]=info(c);return `<span style="--subject:${color}">${n}</span>`}).join("")}</div>`; }
   updateNextLesson();
 }
