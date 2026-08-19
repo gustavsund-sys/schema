@@ -1,3 +1,10 @@
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-app.js";
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-auth.js";
+import { getFirestore, doc, onSnapshot, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-firestore.js";
+
+const firebaseConfig = { apiKey:"AIzaSyASDU7WFHjIVr6sWt1sVrcJtY2xdEq-PIc", authDomain:"skolschema-2650a.firebaseapp.com", projectId:"skolschema-2650a", storageBucket:"skolschema-2650a.firebasestorage.app", messagingSenderId:"16889883202", appId:"1:16889883202:web:c50aaac1190ab39abddbdb", measurementId:"G-5Q6F7TX3GL" };
+const firebaseApp = initializeApp(firebaseConfig), auth = getAuth(firebaseApp), db = getFirestore(firebaseApp);
+const adminUid = "7BZrSETmpabYd3aXd2JTIPuVRVn1";
 const days = ["Måndag", "Tisdag", "Onsdag", "Torsdag", "Fredag"];
 const subjectInfo = {
   SV:["Svenska","📝","#f51d24"], MA:["Matte","📐","#2049e8"], NO:["NO","⚗️","#058344"], SL:["Slöjd","🪚","#0eef13"], MU:["Musik","🎧","#6e0575"], SO:["SO","🗺️","#fff200"], HKK:["Hemkunskap","🥘","#a56a18"], IDH:["Idrott","🏃","#ef78ee"], EN:["Engelska","💬","#8a0991"], BL:["Bild","🖌️","#a56a18"], TK:["Teknik","🔧","#058344"], LUNCH:["Lunch","🍽️","#d9dde7"], SPRÅK:["Språk / elevens val","🗣️","#ff7c3d"]
@@ -29,6 +36,8 @@ const $ = s => document.querySelector(s);
 function settingsForChild() { return childSettings[child] || defaultSettings(); }
 function saveSettings() { localStorage.setItem(settingsKey, JSON.stringify(childSettings)); }
 function applyAccent() { document.documentElement.style.setProperty("--purple", accents[settingsForChild().accent] || accents.purple); }
+function validWeek(week) { return Array.isArray(week) && week.length === 5 && week.every(day => Array.isArray(day) && day.every(lesson => Array.isArray(lesson) && lesson.length >= 3)); }
+function escapeHtml(value) { return String(value).replace(/[&<>'"]/g, char => ({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[char])); }
 const installButton = $("#install-app"), installHelp = $("#install-help");
 let installEvent;
 const onPhone = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
@@ -87,5 +96,22 @@ $("#open-settings").onclick=()=>{refreshSettingsDialog();settingsDialog.showModa
 $("#accent-choices").onclick=e=>{const button=e.target.closest("[data-accent]");if(!button)return;settingsForChild().accent=button.dataset.accent;saveSettings();applyAccent();refreshSettingsDialog();render();};
 $("#display-choices").onclick=e=>{const button=e.target.closest("[data-display]");if(!button)return;settingsForChild().display=button.dataset.display;saveSettings();refreshSettingsDialog();render();};
 try {const saved=JSON.parse(localStorage.getItem(settingsKey));["sixten","ilse"].forEach(name => { if (saved?.[name]) childSettings[name] = { ...defaultSettings(), accent: saved[name].accent, display: saved[name].display, theme: saved[name].theme }; });}catch{}
+let signedInUser=null;
+function syncChild(childId) { onSnapshot(doc(db,"skolschema",childId), snapshot => { const week=snapshot.data()?.week; if(validWeek(week)){schedules[childId]=week;if(child===childId)render();} }, () => {}); }
+syncChild("sixten"); syncChild("ilse");
+const adminDialog=$("#admin-dialog"), editorState={child:"sixten",day:0,code:"SV",editing:null};
+function renderEditor() { const lessons=schedules[editorState.child][editorState.day]; $("#editor-child").value=editorState.child;$("#editor-day").value=editorState.day;$("#editor-lessons").innerHTML=lessons.length?lessons.map((lesson,index)=>{const [name,icon,color]=info(lesson[2]);return `<article class="editor-lesson" style="--subject:${color}"><button type="button" data-edit="${index}"><time>${lesson[0]}–${lesson[1]}</time><strong>${icon} ${name}</strong>${lesson[3]?`<small>${escapeHtml(lesson[3])}</small>`:""}</button><button type="button" data-delete="${index}" aria-label="Ta bort ${name}">×</button></article>`;}).join(""):`<p class="empty">Inga lektioner ännu.</p>`;$("#subject-blocks").innerHTML=Object.entries(subjectInfo).map(([code,[name,icon,color]])=>`<button type="button" data-subject="${code}" class="subject-block ${editorState.code===code?"selected":""}" style="--subject:${color}">${icon} ${name}</button>`).join(""); }
+function resetEditorForm(){editorState.editing=null;$("#lesson-form-title").textContent="Lägg till lektion";$("#save-lesson").textContent="Lägg till lektion";$("#cancel-lesson").classList.add("hidden");$("#lesson-start").value="";$("#lesson-end").value="";$("#lesson-detail").value="";}
+async function saveWeek(childId){await setDoc(doc(db,"skolschema",childId),{week:schedules[childId],updatedAt:serverTimestamp()},{merge:true});}
+function showEditor(){ $("#login-screen").classList.add("hidden");$("#editor-screen").classList.remove("hidden");editorState.child=child||"sixten";editorState.day=chosenDay;resetEditorForm();renderEditor();}
+$("#open-admin").onclick=()=>{adminDialog.showModal();if(signedInUser?.uid===adminUid)showEditor();else{$("#login-screen").classList.remove("hidden");$("#editor-screen").classList.add("hidden");}};
+$("#close-admin").onclick=()=>adminDialog.close();
+$("#login-form").onsubmit=async e=>{e.preventDefault();const message=$("#login-message");try{await signInWithEmailAndPassword(auth,$("#login-email").value,$("#login-password").value);message.textContent="";}catch{message.textContent="Kunde inte logga in. Kontrollera e-post och lösenord.";}};
+onAuthStateChanged(auth,user=>{signedInUser=user;if(user && user.uid===adminUid){if(adminDialog.open)showEditor();}else if(user){$("#login-message").textContent="Det här kontot saknar rättighet att ändra schemat.";}});
+$("#editor-child").onchange=e=>{editorState.child=e.target.value;resetEditorForm();renderEditor();};$("#editor-day").onchange=e=>{editorState.day=Number(e.target.value);resetEditorForm();renderEditor();};
+$("#subject-blocks").onclick=e=>{const button=e.target.closest("[data-subject]");if(button){editorState.code=button.dataset.subject;renderEditor();}};
+$("#editor-lessons").onclick=async e=>{const del=e.target.closest("[data-delete]");if(del){schedules[editorState.child][editorState.day].splice(Number(del.dataset.delete),1);await saveWeek(editorState.child);resetEditorForm();renderEditor();if(child===editorState.child)render();return;}const edit=e.target.closest("[data-edit]");if(!edit)return;const lesson=schedules[editorState.child][editorState.day][Number(edit.dataset.edit)];editorState.editing=Number(edit.dataset.edit);editorState.code=lesson[2];$("#lesson-start").value=lesson[0];$("#lesson-end").value=lesson[1];$("#lesson-detail").value=lesson[3];$("#lesson-form-title").textContent="Ändra lektion";$("#save-lesson").textContent="Spara ändring";$("#cancel-lesson").classList.remove("hidden");renderEditor();};
+$("#lesson-form").onsubmit=async e=>{e.preventDefault();const start=$("#lesson-start").value,end=$("#lesson-end").value;if(end<=start)return;const day=schedules[editorState.child][editorState.day], lesson=[start,end,editorState.code,$("#lesson-detail").value.trim()];if(editorState.editing===null)day.push(lesson);else day[editorState.editing]=lesson;day.sort((a,b)=>a[0].localeCompare(b[0]));await saveWeek(editorState.child);resetEditorForm();renderEditor();if(child===editorState.child)render();};
+$("#cancel-lesson").onclick=()=>{resetEditorForm();renderEditor();};$("#new-term").onclick=async()=>{const name=editorState.child==="sixten"?"Sixten":"Ilse";if(!confirm(`Starta ny termin för ${name}? Det nuvarande schemat ersätts.`))return;schedules[editorState.child]=Array.from({length:5},()=>[]);await saveWeek(editorState.child);resetEditorForm();renderEditor();if(child===editorState.child)render();};$("#sign-out").onclick=()=>signOut(auth);
 setInterval(updateNextLesson, 30000);
 if ("serviceWorker" in navigator) window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js"));
