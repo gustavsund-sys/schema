@@ -89,6 +89,16 @@ const todayIndex = new Date().getDay() - 1;
 let child = null, view = "day", chosenDay = todayIndex;
 if (chosenDay < 0 || chosenDay > 4) chosenDay = 0;
 const $ = s => document.querySelector(s);
+const installButton = $("#install-app"), installHelp = $("#install-help");
+let installEvent;
+const onPhone = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+const onIos = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+const installed = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone;
+if (onIos && !installed) { installHelp.textContent = "Installera: öppna sidan i Safari, tryck Dela och välj “Lägg till på hemskärmen”."; installHelp.classList.remove("hidden"); }
+if (!onPhone) { installHelp.textContent = "Öppna appen på en telefon för att installera den på hemskärmen."; installHelp.classList.remove("hidden"); }
+window.addEventListener("beforeinstallprompt", event => { event.preventDefault(); installEvent = event; installButton.classList.remove("hidden"); });
+installButton.onclick = async () => { if (!installEvent) return; installEvent.prompt(); await installEvent.userChoice; installEvent = null; installButton.classList.add("hidden"); };
+window.addEventListener("appinstalled", () => { installHelp.textContent = "Appen är installerad på hemskärmen."; installHelp.classList.remove("hidden"); installButton.classList.add("hidden"); });
 function info(code) { return subjectInfo[code] || [code, "📘", "#8d92a7"]; }
 function minutesSinceMidnight(time) { const [hours, minutes] = time.split(":").map(Number); return hours * 60 + minutes; }
 function updateNextLesson() {
