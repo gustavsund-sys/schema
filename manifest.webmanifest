@@ -1,0 +1,13 @@
+{
+  "name": "Mitt skolschema",
+  "short_name": "Skolschema",
+  "description": "Sixtens och Ilses skolschema.",
+  "lang": "sv",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f4f5fb",
+  "theme_color": "#5b47e5",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
