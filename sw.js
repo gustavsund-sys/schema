@@ -1,5 +1,5 @@
-const cacheName = "mitt-skolschema-v17";
-const appFiles = ["./", "./index.html", "./styles.css?v=21", "./app.js?v=30", "./manifest.webmanifest", "./icon.svg"];
+const cacheName = "mitt-skolschema-v18";
+const appFiles = ["./", "./index.html", "./styles.css?v=21", "./app.js?v=31", "./manifest.webmanifest", "./icon.svg"];
 self.addEventListener("install", event => event.waitUntil(caches.open(cacheName).then(cache => cache.addAll(appFiles)).then(() => self.skipWaiting())));
 self.addEventListener("activate", event => event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(key => key !== cacheName).map(key => caches.delete(key)))).then(() => self.clients.claim())));
 self.addEventListener("fetch", event => { if (event.request.method !== "GET") return; const sameOrigin = new URL(event.request.url).origin === location.origin; const updateFirst = event.request.mode === "navigate" || new URL(event.request.url).pathname.endsWith("index.html"); const network = fetch(event.request).then(response => { const copy = response.clone(); if (sameOrigin) caches.open(cacheName).then(cache => cache.put(event.request, copy)); return response; }); event.respondWith(updateFirst ? network.catch(() => caches.match(event.request).then(hit => hit || caches.match("./index.html"))) : caches.match(event.request).then(hit => hit || network.catch(() => caches.match("./index.html")))); });
