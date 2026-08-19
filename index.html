@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="sv">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#5b47e5" />
+    <title>Mitt skolschema</title>
+    <link rel="stylesheet" href="styles.css?v=7" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section id="home" class="home-screen" aria-labelledby="welcome-title">
+        <p class="eyebrow">SKOLDAGEN</p>
+        <h1 id="welcome-title">Vems schema vill du se?</h1>
+        <p class="intro">Välj ett namn för att se dagens lektioner eller hela veckan.</p>
+        <div class="child-picker">
+          <button class="child-card sixten" data-child="sixten"><span aria-hidden="true">S</span><strong>Sixten</strong><small>Mitt schema</small></button>
+          <button class="child-card ilse" data-child="ilse"><span aria-hidden="true">I</span><strong>Ilse</strong><small>Mitt schema</small></button>
+        </div>
+        <button class="quiet-button" id="open-import-home">Byt till ett nytt termins-schema</button>
+      </section>
+
+      <section id="schedule" class="schedule-screen hidden" aria-live="polite">
+        <header class="topbar">
+          <button class="round-button" id="go-home" aria-label="Tillbaka till val av schema">←</button>
+          <div><p class="eyebrow" id="child-label">SIXTENS SCHEMA</p><h1 id="schedule-title">Hej Sixten!</h1></div>
+          <button class="round-button" id="open-import" aria-label="Importera schema">⚙</button>
+        </header>
+
+        <nav class="view-toggle" aria-label="Välj vy">
+          <button data-view="day" class="active">Idag</button>
+          <button data-view="week">Veckan</button>
+        </nav>
+        <section id="schedule-content"></section>
+      </section>
+    </main>
+
+    <dialog id="import-dialog">
+      <form method="dialog" class="import-card">
+        <button class="dialog-close" value="cancel" aria-label="Stäng">×</button>
+        <p class="eyebrow">NY TERMIN</p>
+        <h2>Importera schema</h2>
+        <p>Importera en PDF med ett nytt schema. PDF:en läses bara i din webbläsare.</p>
+        <div class="import-actions">
+          <label class="primary file-label">Välj PDF-schema<input id="file-input" type="file" accept="application/pdf,.pdf" /></label>
+        </div>
+        <p id="import-status" class="import-status"></p>
+        <section id="pdf-review" class="pdf-review hidden" aria-live="polite">
+          <h3>Granska PDF-importen</h3>
+          <p>Kontrollera tider och ämnen innan du sparar.</p>
+          <div id="pdf-preview" class="pdf-preview"></div>
+          <details><summary>Avancerad redigering</summary><textarea id="pdf-json" spellcheck="false" aria-label="Schemaförslag"></textarea></details>
+          <button type="button" class="primary" id="save-pdf-import">Spara granskat schema</button>
+        </section>
+        <details><summary>Tips för bäst resultat</summary><p>Välj en PDF där veckodagar, tider och ämnesförkortningar går att läsa tydligt. I ett inskannat schema kan några delar behöva granskas extra noga.</p></details>
+      </form>
+    </dialog>
+    <script src="app.js?v=15"></script>
+  </body>
+</html>
