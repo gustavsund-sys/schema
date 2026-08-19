@@ -4,8 +4,12 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#5b47e5" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <title>Mitt skolschema</title>
-    <link rel="stylesheet" href="styles.css?v=7" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="icon.svg" />
+    <link rel="stylesheet" href="styles.css?v=16" />
   </head>
   <body>
     <main class="app-shell">
@@ -24,13 +28,14 @@
         <header class="topbar">
           <button class="round-button" id="go-home" aria-label="Tillbaka till val av schema">←</button>
           <div><p class="eyebrow" id="child-label">SIXTENS SCHEMA</p><h1 id="schedule-title">Hej Sixten!</h1></div>
-          <button class="round-button" id="open-import" aria-label="Importera schema">⚙</button>
+          <div class="topbar-actions"><button class="round-button" id="theme-toggle" aria-label="Växla mörkt läge">◐</button><button class="round-button" id="open-import" aria-label="Importera schema">⚙</button></div>
         </header>
 
         <nav class="view-toggle" aria-label="Välj vy">
           <button data-view="day" class="active">Idag</button>
           <button data-view="week">Veckan</button>
         </nav>
+        <section id="next-lesson" class="next-lesson" aria-live="polite"></section>
         <section id="schedule-content"></section>
       </section>
     </main>
@@ -55,6 +60,6 @@
         <details><summary>Tips för bäst resultat</summary><p>Välj en PDF där veckodagar, tider och ämnesförkortningar går att läsa tydligt. I ett inskannat schema kan några delar behöva granskas extra noga.</p></details>
       </form>
     </dialog>
-    <script src="app.js?v=15"></script>
+    <script src="app.js?v=16"></script>
   </body>
 </html>
