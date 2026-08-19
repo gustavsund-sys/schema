@@ -9,7 +9,7 @@
     <title>Mitt skolschema</title>
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="apple-touch-icon" href="icon.svg" />
-    <link rel="stylesheet" href="styles.css?v=17" />
+    <link rel="stylesheet" href="styles.css?v=18" />
   </head>
   <body>
     <main class="app-shell">
@@ -30,7 +30,7 @@
         <header class="topbar">
           <button class="round-button" id="go-home" aria-label="Tillbaka till val av schema">←</button>
           <div><p class="eyebrow" id="child-label">SIXTENS SCHEMA</p><h1 id="schedule-title">Hej Sixten!</h1></div>
-          <div class="topbar-actions"><button class="round-button" id="theme-toggle" aria-label="Växla mörkt läge">◐</button><button class="round-button" id="open-import" aria-label="Importera schema">⚙</button></div>
+          <div class="topbar-actions"><button class="round-button" id="theme-toggle" aria-label="Växla mörkt läge">◐</button><button class="round-button" id="open-settings" aria-label="Inställningar">⚙</button></div>
         </header>
 
         <nav class="view-toggle" aria-label="Välj vy">
@@ -62,6 +62,32 @@
         <details><summary>Tips för bäst resultat</summary><p>Välj en PDF där veckodagar, tider och ämnesförkortningar går att läsa tydligt. I ett inskannat schema kan några delar behöva granskas extra noga.</p></details>
       </form>
     </dialog>
-    <script src="app.js?v=17"></script>
+    <dialog id="settings-dialog">
+      <form method="dialog" class="settings-card">
+        <button class="dialog-close" value="cancel" aria-label="Stäng">×</button>
+        <p class="eyebrow">MINA INSTÄLLNINGAR</p>
+        <h2>Gör schemat till ditt</h2>
+        <p class="settings-subtitle">Inställningarna sparas bara på den här enheten.</p>
+        <fieldset>
+          <legend>Färgtema</legend>
+          <div class="choice-row" id="accent-choices">
+            <button type="button" data-accent="purple">Lila</button>
+            <button type="button" data-accent="blue">Blå</button>
+            <button type="button" data-accent="green">Grön</button>
+            <button type="button" data-accent="coral">Korall</button>
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>Visa på lektionsrader</legend>
+          <div class="choice-row" id="display-choices">
+            <button type="button" data-display="both">Tid + ikon</button>
+            <button type="button" data-display="times">Bara tid</button>
+            <button type="button" data-display="icons">Bara ikon</button>
+          </div>
+        </fieldset>
+        <button type="button" class="secondary settings-import" id="open-import">Importera nytt termins-schema</button>
+      </form>
+    </dialog>
+    <script src="app.js?v=18"></script>
   </body>
 </html>
