@@ -23,7 +23,6 @@
         </div>
         <button class="install-button hidden" id="install-app">Installera som app</button>
         <p class="install-help hidden" id="install-help"></p>
-        <button class="quiet-button" id="open-import-home">Byt till ett nytt termins-schema</button>
       </section>
 
       <section id="schedule" class="schedule-screen hidden" aria-live="polite">
@@ -42,26 +41,6 @@
       </section>
     </main>
 
-    <dialog id="import-dialog">
-      <form method="dialog" class="import-card">
-        <button class="dialog-close" value="cancel" aria-label="Stäng">×</button>
-        <p class="eyebrow">NY TERMIN</p>
-        <h2>Importera schema</h2>
-        <p>Importera en PDF med ett nytt schema. PDF:en läses bara i din webbläsare.</p>
-        <div class="import-actions">
-          <label class="primary file-label">Välj PDF-schema<input id="file-input" type="file" accept="application/pdf,.pdf" /></label>
-        </div>
-        <p id="import-status" class="import-status"></p>
-        <section id="pdf-review" class="pdf-review hidden" aria-live="polite">
-          <h3>Granska PDF-importen</h3>
-          <p>Kontrollera tider och ämnen innan du sparar.</p>
-          <div id="pdf-preview" class="pdf-preview"></div>
-          <details><summary>Avancerad redigering</summary><textarea id="pdf-json" spellcheck="false" aria-label="Schemaförslag"></textarea></details>
-          <button type="button" class="primary" id="save-pdf-import">Spara granskat schema</button>
-        </section>
-        <details><summary>Tips för bäst resultat</summary><p>Välj en PDF där veckodagar, tider och ämnesförkortningar går att läsa tydligt. I ett inskannat schema kan några delar behöva granskas extra noga.</p></details>
-      </form>
-    </dialog>
     <dialog id="settings-dialog">
       <form method="dialog" class="settings-card">
         <button class="dialog-close" value="cancel" aria-label="Stäng">×</button>
@@ -85,9 +64,8 @@
             <button type="button" data-display="icons">Bara ikon</button>
           </div>
         </fieldset>
-        <button type="button" class="secondary settings-import" id="open-import">Importera nytt termins-schema</button>
       </form>
     </dialog>
-    <script src="app.js?v=20"></script>
+    <script src="app.js?v=21"></script>
   </body>
 </html>
