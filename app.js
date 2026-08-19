@@ -43,7 +43,8 @@ let installEvent;
 const onPhone = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 const onIos = /iPhone|iPad|iPod/i.test(navigator.userAgent);
 const installed = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone;
-if (onIos && !installed) { installHelp.textContent = "Installera: öppna sidan i Safari, tryck Dela och välj “Lägg till på hemskärmen”."; installHelp.classList.remove("hidden"); }
+const shareIcon = `<span class="ios-share-icon" aria-label="Dela"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3m0 0-4 4m4-4 4 4M5 10v9h14v-9"/></svg></span>`;
+if (onIos && !installed) { installHelp.innerHTML = `Installera: öppna sidan i Safari, tryck på ${shareIcon} och välj “Lägg till på hemskärmen”.`; installHelp.classList.remove("hidden"); }
 if (!onPhone) { installHelp.textContent = "Öppna appen på en telefon för att installera den på hemskärmen."; installHelp.classList.remove("hidden"); }
 window.addEventListener("beforeinstallprompt", event => { event.preventDefault(); installEvent = event; installButton.classList.remove("hidden"); });
 installButton.onclick = async () => { if (!installEvent) return; installEvent.prompt(); await installEvent.userChoice; installEvent = null; installButton.classList.add("hidden"); };
