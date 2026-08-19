@@ -9,7 +9,7 @@
     <title>Mitt skolschema</title>
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="apple-touch-icon" href="icon.svg" />
-    <link rel="stylesheet" href="styles.css?v=19" />
+    <link rel="stylesheet" href="styles.css?v=20" />
   </head>
   <body>
     <main class="app-shell">
@@ -23,6 +23,7 @@
         </div>
         <button class="install-button hidden" id="install-app">Installera som app</button>
         <p class="install-help hidden" id="install-help"></p>
+        <button class="admin-link" id="open-admin">Administrera schema</button>
       </section>
 
       <section id="schedule" class="schedule-screen hidden" aria-live="polite">
@@ -66,6 +67,24 @@
         </fieldset>
       </form>
     </dialog>
-    <script src="app.js?v=21"></script>
+    <dialog id="admin-dialog">
+      <section class="admin-card">
+        <button class="dialog-close" id="close-admin" aria-label="Stäng">×</button>
+        <section id="login-screen">
+          <p class="eyebrow">ADMINISTRERA SCHEMA</p><h2>Logga in</h2>
+          <p>Endast godkända vuxenkonton kan ändra schemat.</p>
+          <form id="login-form" class="login-form"><label>E-post<input id="login-email" type="email" autocomplete="email" required /></label><label>Lösenord<input id="login-password" type="password" autocomplete="current-password" required /></label><button class="primary">Logga in</button></form>
+          <p id="login-message" class="form-message" role="alert"></p>
+        </section>
+        <section id="editor-screen" class="hidden">
+          <p class="eyebrow">REDIGERINGSLÄGE</p><h2>Bygg schemat</h2>
+          <div class="editor-selects"><label>Barn<select id="editor-child"><option value="sixten">Sixten</option><option value="ilse">Ilse</option></select></label><label>Dag<select id="editor-day"><option value="0">Måndag</option><option value="1">Tisdag</option><option value="2">Onsdag</option><option value="3">Torsdag</option><option value="4">Fredag</option></select></label></div>
+          <section id="editor-lessons" class="editor-lessons"></section>
+          <form id="lesson-form" class="lesson-form"><h3 id="lesson-form-title">Lägg till lektion</h3><div class="time-inputs"><label>Start<input id="lesson-start" type="time" required /></label><label>Slut<input id="lesson-end" type="time" required /></label></div><p>Välj ämne</p><div id="subject-blocks" class="subject-blocks"></div><label>Extra text <input id="lesson-detail" maxlength="40" placeholder="t.ex. Elevens val" /></label><div class="editor-actions"><button class="primary" id="save-lesson">Lägg till lektion</button><button class="secondary hidden" type="button" id="cancel-lesson">Avbryt</button></div></form>
+          <button class="new-term-button" id="new-term" type="button">Starta ny termin för valt barn</button><button class="admin-signout" id="sign-out" type="button">Logga ut</button>
+        </section>
+      </section>
+    </dialog>
+    <script type="module" src="app.js?v=22"></script>
   </body>
 </html>
