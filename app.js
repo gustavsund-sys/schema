@@ -112,8 +112,9 @@ function minutesSinceMidnight(time) { const [hours, minutes] = time.split(":").m
 function updateNextLesson() {
   const container = $("#next-lesson");
   if (!child) { container.innerHTML = ""; return; }
+  const reminder = view === "day" ? packReminder() : "";
   const actualDay = new Date().getDay() - 1;
-  if (actualDay < 0 || actualDay > 4) { container.innerHTML = `<article class="next-card finished"><p class="eyebrow">SKOLDAGEN</p><h2>Ingen skola idag</h2><p>Vi ses nästa skoldag.</p></article>`; return; }
+  if (actualDay < 0 || actualDay > 4) { container.innerHTML = `<article class="next-card finished"><p class="eyebrow">SKOLDAGEN</p><h2>Ingen skola idag</h2><p>Vi ses nästa skoldag.</p></article>${reminder}`; return; }
   const now = new Date(), nowMinutes = now.getHours() * 60 + now.getMinutes(), today = schedules[child][actualDay];
   const current = today.find(lesson => minutesSinceMidnight(lesson[0]) <= nowMinutes && minutesSinceMidnight(lesson[1]) > nowMinutes);
   const upcoming = today.find(lesson => lesson[2] !== "LUNCH" && minutesSinceMidnight(lesson[0]) > nowMinutes);
@@ -122,10 +123,10 @@ function updateNextLesson() {
   const nextDay = actualDay === 4 ? 0 : actualDay + 1;
   const tomorrowFirst = schedules[child][nextDay].find(lesson => lesson[2] !== "LUNCH");
   const summary = `<div class="quick-facts"><span>🍽️ Lunch ${lunch?.[0] || ""}</span><span>🏁 Slutar ${last?.[1] || ""}</span><span>→ ${days[nextDay]} ${tomorrowFirst?.[0] || ""}</span></div>`;
-  if (current) { const [name, icon] = info(current[2]), remaining = minutesSinceMidnight(current[1]) - nowMinutes; container.innerHTML = `<article class="next-card"><p class="eyebrow">JUST NU</p><h2>${icon} ${name} · till ${current[1]}</h2><p class="countdown">Slutar om ${remaining} min</p>${summary}</article>`; return; }
-  if (!upcoming) { container.innerHTML = `<article class="next-card finished"><p class="eyebrow">SKOLDAGEN</p><h2>Dagens skoldag är slut</h2><p>Fint jobbat idag.</p>${summary}</article>`; return; }
+  if (current) { const [name, icon] = info(current[2]), remaining = minutesSinceMidnight(current[1]) - nowMinutes; container.innerHTML = `<article class="next-card"><p class="eyebrow">JUST NU</p><h2>${icon} ${name} · till ${current[1]}</h2><p class="countdown">Slutar om ${remaining} min</p>${summary}</article>${reminder}`; return; }
+  if (!upcoming) { container.innerHTML = `<article class="next-card finished"><p class="eyebrow">SKOLDAGEN</p><h2>Dagens skoldag är slut</h2><p>Fint jobbat idag.</p>${summary}</article>${reminder}`; return; }
   const [name, icon] = info(upcoming[2]), remaining = minutesSinceMidnight(upcoming[0]) - nowMinutes;
-  container.innerHTML = `<article class="next-card"><p class="eyebrow">NÄSTA LEKTION</p><h2>${icon} ${name} · ${upcoming[0]}</h2><p class="countdown">${name} börjar om ${remaining} min</p>${summary}</article>`;
+  container.innerHTML = `<article class="next-card"><p class="eyebrow">NÄSTA LEKTION</p><h2>${icon} ${name} · ${upcoming[0]}</h2><p class="countdown">${name} börjar om ${remaining} min</p>${summary}</article>${reminder}`;
 }
 function lessonCard(lesson, small=false) { const [start,end,code,detail] = lesson, [name,icon,color] = info(code), display = settingsForChild().display; const time = display === "icons" ? "" : `<time>${start}${small ? "–" : "<br>– "}${end}</time>`; const iconHtml = display === "times" ? "" : `<span class="subject-icon" aria-hidden="true">${icon}</span>`; return small ? `<article class="week-lesson ${display}" style="--subject:${color}">${time}<strong>${name}</strong>${detail?`<small>${detail}</small>`:""}</article>` : `<article class="lesson ${display}" style="--subject:${color}">${time}<div class="lesson-info"><div><h3>${name}</h3>${detail?`<p>${detail}</p>`:""}</div>${iconHtml}</div></article>`; }
 function packReminder() {
@@ -138,7 +139,7 @@ function render() {
   applyAccent();
   $("#child-label").textContent = `${name.toUpperCase()}S SCHEMA`; $("#schedule-title").textContent = `Hej ${name}!`;
   document.querySelectorAll(".view-toggle button").forEach(b => b.classList.toggle("active",b.dataset.view===view));
-  if (view === "day") { const isToday = chosenDay === todayIndex; $("#schedule-content").innerHTML = `<h2 class="day-title">${isToday ? "IDAG · " : ""}${days[chosenDay]}</h2><div class="day-list">${data[chosenDay].map(x=>lessonCard(x)).join("") || '<p class="empty">Inga lektioner idag.</p>'}</div>${packReminder()}<nav class="day-navigation" aria-label="Byt dag"><button data-step="-1" ${chosenDay === 0 ? "disabled" : ""}><span aria-hidden="true">←</span> Föregående</button><button data-step="1" ${chosenDay === days.length - 1 ? "disabled" : ""}>Nästa <span aria-hidden="true">→</span></button></nav>`; }
+  if (view === "day") { const isToday = chosenDay === todayIndex; $("#schedule-content").innerHTML = `<h2 class="day-title">${isToday ? "IDAG · " : ""}${days[chosenDay]}</h2><div class="day-list">${data[chosenDay].map(x=>lessonCard(x)).join("") || '<p class="empty">Inga lektioner idag.</p>'}</div><nav class="day-navigation" aria-label="Byt dag"><button data-step="-1" ${chosenDay === 0 ? "disabled" : ""}><span aria-hidden="true">←</span> Föregående</button><button data-step="1" ${chosenDay === days.length - 1 ? "disabled" : ""}>Nästa <span aria-hidden="true">→</span></button></nav>`; }
   else { const used=[...new Set(data.flat().map(x=>x[2]))]; $("#schedule-content").innerHTML = `<p class="week-hint">Tryck på dagens rubrik för att se den närmare.</p><div class="week-grid">${data.map((day,i)=>`<section class="week-day ${i === todayIndex ? "is-today" : ""}"><button class="week-day-heading" data-week-day="${i}" aria-label="Visa ${days[i]}"><h2>${days[i]}${i === todayIndex ? '<span class="today-badge">IDAG</span>' : ""}</h2><span aria-hidden="true">→</span></button><span class="week-count">${day.length} pass</span>${day.map(x=>lessonCard(x,true)).join("")}</section>`).join("")}</div><div class="legend">${used.map(c=>{const [n,,color]=info(c);return `<span style="--subject:${color}">${n}</span>`}).join("")}</div>`; }
   updateNextLesson();
 }
