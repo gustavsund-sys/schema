@@ -7,7 +7,7 @@ const firebaseApp = initializeApp(firebaseConfig), auth = getAuth(firebaseApp), 
 const adminUid = "7BZrSETmpabYd3aXd2JTIPuVRVn1";
 const days = ["Måndag", "Tisdag", "Onsdag", "Torsdag", "Fredag"];
 const subjectInfo = {
-  SV:["Svenska","📝","#f51d24"], MA:["Matte","📐","#2049e8"], NO:["NO","⚗️","#058344"], SL:["Slöjd","🪚","#0eef13"], MU:["Musik","🎧","#6e0575"], SO:["SO","🗺️","#fff200"], HKK:["Hemkunskap","🥘","#a56a18"], IDH:["Idrott","🏃","#ef78ee"], EN:["Engelska","💬","#8a0991"], BL:["Bild","🖌️","#a56a18"], TK:["Teknik","🔧","#058344"], RAST:["Rast","☀️","#c9d1dc"], LUNCH:["Lunch","🍽️","#d9dde7"], SPRÅK:["Språk / elevens val","🗣️","#ff7c3d"]
+  SV:["Svenska","📝","#f51d24"], MA:["Matte","📐","#2049e8"], NO:["NO","⚗️","#058344"], SL:["Slöjd","🪚","#0eef13"], MU:["Musik","🎧","#6e0575"], SO:["SO","🗺️","#fff200"], HKK:["Hemkunskap","🥘","#a56a18"], IDH:["Idrott","🏃","#ef78ee"], EN:["Engelska","💬","#8a0991"], BL:["Bild","🖌️","#a56a18"], TK:["Teknik","🔧","#058344"], RAST:["Rast","☀️","#72c58a"], LUNCH:["Lunch","🍽️","#d9dde7"], SPRÅK:["Språk / elevens val","🗣️","#ff7c3d"]
 };
 const schedules = {
   sixten: [
